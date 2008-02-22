@@ -1,8 +1,8 @@
 /** \class MuonDetLayerMeasurements
  *  The class to access recHits and TrajectoryMeasurements from DetLayer.
  *
- *  $Date: 2007/02/16 13:34:18 $
- *  $Revision: 1.21 $
+ *  $Date: 2007/11/20 19:05:32 $
+ *  $Revision: 1.22 $
  *  \author C. Liu, R. Bellan, N. Amapane
  *
  */
@@ -26,20 +26,22 @@ typedef MuonTransientTrackingRecHit::MuonRecHitPointer MuonRecHitPointer;
 typedef MuonTransientTrackingRecHit::MuonRecHitContainer MuonRecHitContainer;
 
 
-MuonDetLayerMeasurements::MuonDetLayerMeasurements(bool enableDT, bool enableCSC, bool enableRPC,
-        std::string dtlabel, std::string csclabel, std::string rpclabel)
-: enableDTMeasurement(enableDT),
-  enableCSCMeasurement(enableCSC),
-  enableRPCMeasurement(enableRPC),
+
+MuonDetLayerMeasurements::~MuonDetLayerMeasurements() {}
+
+
+MuonDetLayerMeasurements::MuonDetLayerMeasurements(edm::InputTag dtlabel, 
+						   edm::InputTag csclabel, 
+						   edm::InputTag rpclabel,
+						   bool enableDT, bool enableCSC, bool enableRPC): 
   theDTRecHitLabel(dtlabel),
   theCSCRecHitLabel(csclabel),
   theRPCRecHitLabel(rpclabel),
-  theEvent(0)
-{
-}
+  enableDTMeasurement(enableDT),
+  enableCSCMeasurement(enableCSC),
+  enableRPCMeasurement(enableRPC),
+  theEvent(0){}
 
-MuonDetLayerMeasurements::~MuonDetLayerMeasurements() {
-}
 
 MuonTransientTrackingRecHit::MuonRecHitContainer MuonDetLayerMeasurements::recHits(const GeomDet* geomDet, const edm::Event& iEvent) const {
 
