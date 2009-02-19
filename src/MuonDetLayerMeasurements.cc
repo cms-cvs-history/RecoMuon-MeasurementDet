@@ -1,8 +1,8 @@
 /** \class MuonDetLayerMeasurements
  *  The class to access recHits and TrajectoryMeasurements from DetLayer.
  *
- *  $Date: 2008/11/14 04:28:57 $
- *  $Revision: 1.27 $
+ *  $Date: 2008/12/02 03:07:19 $
+ *  $Revision: 1.28 $
  *  \author C. Liu, R. Bellan, N. Amapane
  *
  */
@@ -81,8 +81,9 @@ MuonRecHitContainer MuonDetLayerMeasurements::recHits(const GeomDet* geomDet,
     
       // Create the MuonTransientTrackingRecHit
       for (CSCSegmentCollection::const_iterator rechit = range.first; 
-           rechit!=range.second; ++rechit)
-        result.push_back(MuonTransientTrackingRecHit::specificBuild(geomDet,&*rechit)); 
+	   rechit!=range.second; ++rechit) 
+	if(rechit->chi2()/rechit->degreesOfFreedom() <= 5 && rechit->chi2()/rechit->degreesOfFreedom() > 0.4)
+	  result.push_back(MuonTransientTrackingRecHit::specificBuild(geomDet,&*rechit)); 
     }
   }
   
