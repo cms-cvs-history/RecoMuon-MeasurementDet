@@ -1,8 +1,8 @@
 /** \class MuonDetLayerMeasurements
  *  The class to access recHits and TrajectoryMeasurements from DetLayer.
  *
- *  $Date: 2008/12/02 03:07:19 $
- *  $Revision: 1.28 $
+ *  $Date: 2009/02/19 10:33:30 $
+ *  $Revision: 1.28.2.1 $
  *  \author C. Liu, R. Bellan, N. Amapane
  *
  */
@@ -41,6 +41,8 @@ MuonDetLayerMeasurements::MuonDetLayerMeasurements(edm::InputTag dtlabel,
 
 MuonDetLayerMeasurements::~MuonDetLayerMeasurements(){}
 
+#include "DataFormats/CSCRecHit/interface/CSCRecHit2DCollection.h"
+
 MuonRecHitContainer MuonDetLayerMeasurements::recHits(const GeomDet* geomDet, 
 			                              const edm::Event& iEvent)
 {
@@ -78,12 +80,36 @@ MuonRecHitContainer MuonDetLayerMeasurements::recHits(const GeomDet* geomDet,
 
       // Get the CSC-Segment which relies on this chamber
       CSCSegmentCollection::range range = theCSCRecHits->get(chamberId);
-    
-      // Create the MuonTransientTrackingRecHit
-      for (CSCSegmentCollection::const_iterator rechit = range.first; 
-	   rechit!=range.second; ++rechit) 
-	if(rechit->chi2()/rechit->degreesOfFreedom() <= 5 && rechit->chi2()/rechit->degreesOfFreedom() > 0.4)
-	  result.push_back(MuonTransientTrackingRecHit::specificBuild(geomDet,&*rechit)); 
+
+      edm::Handle<CSCRecHit2DCollection> CSCRecHits2Dddd;
+      iEvent.getByLabel("csc2DRecHits",CSCRecHits2Dddd);
+
+      int nRH = 0;
+      for(int i=1;i<=6;++i){
+	CSCDetId complId(chamberId.endcap(),chamberId.station(),chamberId.ring(),chamberId.chamber(),i);
+	CSCRecHit2DCollection::range rangeRH = CSCRecHits2Dddd->get(complId);
+	int diff = rangeRH.second-rangeRH.first;
+	nRH+=diff;
+	LogTrace("RecoMuon")<< "Number of CSC RecHits in " << complId << " is " << diff;
+      }    
+
+      LogTrace("RecoMuon")<< "Number of CSC RecHits in " << chamberId << " is " << nRH;
+      
+      int limit = (chamberId.station()==1 && chamberId.ring()==4) ? 40 : 20;
+
+      if(nRH<=limit)
+	// Create the MuonTransientTrackingRecHit
+	for (CSCSegmentCollection::const_iterator rechit = range.first; 
+	     rechit!=range.second; ++rechit){ 
+	  double chi2 = rechit->chi2()/rechit->degreesOfFreedom();
+	  LogTrace("RecoMuon")<<"This segment has chi2/ndof-->"<<rechit->chi2()<<"/"<<rechit->degreesOfFreedom()<<"="<<chi2;
+	  if( chi2 <= 5 && rechit->nRecHits()>3)
+	    result.push_back(MuonTransientTrackingRecHit::specificBuild(geomDet,&*rechit)); 
+	  else
+	    LogTrace("RecoMuon")<<"This segment has been rejected, because chi2/ndof="<<chi2;
+	}
+      else
+	LogTrace("RecoMuon")<<"This segment has been rejected, because nhits in the chamber="<<nRH;
     }
   }
   
